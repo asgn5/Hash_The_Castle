@@ -2,87 +2,88 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Random;
 
 /**
- * Included in this atrociously long class are basic Player and Room classes
- * Minimal/basic functionality to view hashtable methods put and get
- * Randomly assigns players and displays their randomly assigned name
- * corresponding to the room they are located within.
- * Warning: proof of concept. Haha. Do what you may with it.
+ * Minimal/basic functionality
  */
 
 public class Castle extends JPanel implements ActionListener {
 
-    //    private HashTable hashTable = new HashTable(7);
-    private Room[] rooms = new Room[7];
-    private AButton[] buttons = new AButton[7];
-    private JButton displayAllRooms;
-    private ArrayList<Player> playerList;
+    /*  gui components */
+    private JButton allRooms;
     private JPanel northPanel, centerPanel;
-    private JTextField textArea;
-    private JTextArea displayAll;
-    private String[] roomNames = {
-        "Living Room", "Office", "Bedroom", "Dungeon", "Balcony", "Sun Room", "Study"
-    };
-    private CastleHashTable<Integer, Player> table;
+    private JTextField textField;
+    private JTextArea textArea;
+    private JButton[] buttons = new JButton[5];
 
+    /* Our implementation of the hash-table, player and room classes */
+    private CastleHashTable<Player, String> table;
+    private Player[] player;
+    private Room[] rooms;
+
+    /* Names of the rooms */
+    private String[] roomNames = {
+        "Dungeon", "Servant's Room", "Great Hall", "Throne Room", "The Wardrobe"
+    };
+
+    /* Names of the players */
+    private String[] names = {
+        "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+        "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen"
+    };
+
+    // TODO: Divide into more for clarity
     public Castle(int windowX, int windowY) {
         this.setPreferredSize(new Dimension(windowX, windowY));
         this.setBackground(Color.white);
         this.setLayout(new BorderLayout());
+
         northPanel = new JPanel(new GridLayout(1, 8));
-        setBackground(Color.black);
-
-        table = new CastleHashTable<>(7);
-
-        playerList = new ArrayList<>();
         centerPanel = new JPanel(new GridLayout());
-        textArea = new JTextField();
-        displayAll = new JTextArea();
-        displayAllRooms = new JButton("Display All Rooms");
-        displayAllRooms.addActionListener(this);
 
+        rooms = new Room[5];
+        table = new CastleHashTable<>(5);
+        player = new Player[15];
+        allRooms = new JButton("Display All Rooms");
+        textArea = new JTextArea();
+        textField = new JTextField();
+
+        /* just aesthetics */
+        textField.setEditable(false);
+        textField.setHorizontalAlignment(JTextField.CENTER);
+        textField.setText("Find out where a player is by clicking a button");
+
+        /* initializing rooms with specified names from roomNames */
         for (int i = 0; i < rooms.length; i++) {
-            rooms[i] = new Room(roomNames[i], i);
+            rooms[i] = new Room(roomNames[i] + " " + i, i);
         }
+
+        /* initializes the players with names from names array*/
+        for (int j = 0; j < player.length; j++) {
+            player[j] = new Player(names[j], j * 10);
+            table.put(player[j], player[j].toString());
+        }
+
+        /* Creates a button for every room with corresponding name */
         for (int l = 0; l < buttons.length; l++) {
-            buttons[l] = new AButton(rooms[l].getRoomName(), l);
+            buttons[l] = new JButton(rooms[l].getRoomName());
             buttons[l].addActionListener(this);
             northPanel.add(buttons[l]);
         }
-        northPanel.add(displayAllRooms);
-        // Randomly assigns players
-        for (int j = 0; j < 10; j++) {
-            Random random = new Random();
-            int next = random.nextInt(100);
-            playerList.add(new Player("Player" + String.valueOf(j + 1), j));
-        }
 
-        textArea.setHorizontalAlignment(JTextField.CENTER);
-        textArea.setEditable(false);
-        textArea.setText("Currently the buttons only retrieve the players that are"
-                             + " randomly assigned to corresponding rooms");
+        allRooms.addActionListener(this);
+        centerPanel.add(textField);
         centerPanel.add(textArea);
-        centerPanel.add(displayAll);
-
+        northPanel.add(allRooms);
 
         this.add(centerPanel, "Center");
         this.add(northPanel, "North");
-
-        // Tests the put method
-        for (Player p : playerList) {
-            table.put(p.hashCode(), p);
-//            System.out.println(p.getPlayerName() + " " + p.getPlayerRoom());
-//            hashTable.put(p.getPlayerRoom().getRoomName(), p.getPlayerName());
-        }
-//        System.out.println(hashTable.printTable());
     }
 
     public static void main(String[] args) {
+        /* For aesthetics takes the native screen size*/
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int width = (int) screenSize.getWidth() / 2;
+        int width = (int) screenSize.getWidth(); // divides in half
         int height = (int) screenSize.getHeight() / 2;
         Window window = new Window();
         Castle view = new Castle(width, height);
@@ -93,29 +94,21 @@ public class Castle extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         for (int i = 0; i < buttons.length; i++) {
+            // button index corresponds to room index
             if (actionEvent.getSource() == buttons[i]) {
-                if (table.get(roomNames[i].hashCode()).getPlayerName() != null) {
-                    String tmp = table.get(roomNames[i].hashCode()).getPlayerName();
-                    if (tmp.equals(null)) {
-                        textArea.setText("KJHLKKKKKKKKKKKKKKHSDFKJLSHDFJKLSDHFKLSDKF");
-                    } else
-                        textArea.setText(tmp);
-                }
-
+                // tests get player by specifying room
+                textField.setText(table.playersInRoom(rooms[i]));
+                repaint();
             }
-
         }
-        repaint();
-        if (actionEvent.getSource() == displayAllRooms) {
-            displayAll.setText(table.displayAll());
+        if (actionEvent.getSource() == allRooms) {
+            textArea.setText(table.displayAll());
             repaint();
-//  displayAll.setText(hashTable.printTable());
         }
-
-
     }
 
-    private static class Window extends JFrame {
+    /* Contains the main window frame. */
+    public static class Window extends JFrame {
         private Container c = this.getContentPane();
 
         private Window() {
@@ -131,16 +124,6 @@ public class Castle extends JPanel implements ActionListener {
             this.setVisible(true);
             this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         }
-    }
-
-    public class AButton extends JButton {
-        private int index;
-
-        public AButton(String roomName, int index) {
-            super(roomName);
-            this.index = index;
-        }
-
     }
 
 }
