@@ -1,23 +1,47 @@
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
-@SuppressWarnings("WeakerAccess")
+/**
+ * @param <K>
+ * @param <V>
+ */
 public class CastleHashTable<K, V> implements CastleHashMap<K, V> {
 
-    private static final int CAPACITY = 10;
-    private static final int LOAD_THRESHOLD = 200;
+    /**
+     *
+     */
+    private static final int CAPACITY = 20;
+
+    /**
+     *
+     */
+    private static final int LOAD_THRESHOLD = 17;
+
+    /**
+     *
+     */
     private LinkedList<ListEntry<K, V>>[] table;
+
+    /**
+     *
+     */
     private int numKeys;
 
+
+    /**
+     * @param numKeys
+     */
     @SuppressWarnings("unchecked")
     public CastleHashTable(int numKeys) {
         table = new LinkedList[numKeys];
     }
 
     /**
-     * TODO: Should be able to search linked list by key
-     * TODO: --> what to do when the index already corresponds to the key?
+     * @param key
+     * @param value
+     * @return
      */
     @Override
     public V put(K key, V value) {
@@ -38,6 +62,10 @@ public class CastleHashTable<K, V> implements CastleHashMap<K, V> {
         return null;
     }
 
+    /**
+     * @param key
+     * @return
+     */
     @Override
     public V get(Object key) {
         int index = key.hashCode() % table.length;
@@ -51,22 +79,15 @@ public class CastleHashTable<K, V> implements CastleHashMap<K, V> {
         return null;
     }
 
+    /**
+     * @param key
+     * @return
+     */
     @Override
     public V remove(Object key) {
         int index = key.hashCode() % table.length;
         if (index < 0) index += table.length;
         if (table[index] == null) return null;
-//        TODO: Should be equivalent
-//        for (ListEntry<K, V> next : table[index]) {
-//            if (next.key.equals(key)) {
-//                V toReturn = next.value;
-//                if (table[index].size() == 1)
-//                    table[index] = null;
-//                else
-//                    table[index].remove(next);
-//                return toReturn;
-//            }
-//        }
         Iterator<ListEntry<K, V>> iter = table[index].iterator();
         while (iter.hasNext()) {
             ListEntry<K, V> next = iter.next();
@@ -82,68 +103,99 @@ public class CastleHashTable<K, V> implements CastleHashMap<K, V> {
         return null;
     }
 
+    /**
+     * @return
+     */
     @Override
     public int size() {
         return table.length;
     }
 
-    // TODO
+    /**
+     * @return
+     */
     @Override
     public boolean isEmpty() {
         return table == null;
     }
 
-    public String displayAll() {
+    /**
+     * @param rooms
+     * @return
+     */
+    public String displayAll(Room[] rooms) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < table.length; i++) {
-            if (table[i] == null)
-                sb.append(i).append(" null\n");
-            else {
-                LinkedList<ListEntry<K, V>> list = table[i];
-                for (ListEntry<K, V> entry : list) {
-                    sb.append(entry.getValue().toString()).append(" ");
-                }
-                sb.append("\n");
-            }
+        for (Room room : rooms) {
+            sb.append(playersInRoom(room)).append("\n");
         }
         return sb.toString();
     }
 
+    /**
+     * @param r
+     * @return
+     */
     public String playersInRoom(Room r) {
         int index = r.getLocation();
-        StringBuilder sb = new StringBuilder();
+        String room = String.format("%-30s", r.toString());
+        StringBuilder sb = new StringBuilder(room);
         if (table[index] == null)
-            //sb.append(r.toString()).append("is empty");
-            sb.append("Empty");
+            sb.append("Empty  ");
         else {
             LinkedList<ListEntry<K, V>> list = table[index];
             for (ListEntry<K, V> entry : list) {
-                sb.append(entry.getValue().toString()).append(" ");
+                sb.append(entry.getValue().toString()).append(", ");
             }
         }
-        return sb.toString();
+        return sb.toString().substring(0, sb.toString().length() - 2);
     }
 
 
+    /**
+     * @param <K>
+     * @param <V>
+     */
     private static class ListEntry<K, V> implements Map.Entry<K, V> {
+
+        /**
+         *
+         */
         private K key;
+
+        /**
+         *
+         */
         private V value;
 
+        /**
+         * @param key
+         * @param value
+         */
         public ListEntry(K key, V value) {
             this.key = key;
             this.value = value;
         }
 
+        /**
+         * @return
+         */
         @Override
         public V getValue() {
             return value;
         }
 
+        /**
+         * @return
+         */
         @Override
         public K getKey() {
             return key;
         }
 
+        /**
+         * @param v
+         * @return
+         */
         @Override
         public V setValue(V v) {
             V old = value;

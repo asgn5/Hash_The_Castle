@@ -1,30 +1,52 @@
-/* Should the Player have a reference to the room?? */
-
+/**
+ *
+ */
 public class Player {
-    
-    private String name;
-//    private Room room;
-    private int where;
 
-    public Player(String name, int where) {
+    /**
+     *
+     */
+    private String name;
+
+    /**
+     *
+     */
+    private int location;
+
+    /**
+     * @param name
+     * @param location
+     */
+    public Player(String name, int location) {
         this.name = name;
-//        this.room = room;
-        this.where = where;
+        this.location = location;
     }
 
+    /**
+     * @return
+     */
     public String getPlayerName() {
         return name;
     }
 
-    public void setWhere(int in) {
-        where = in;
+    /**
+     * @param in
+     */
+    public void setLocation(int in) {
+        location = in;
     }
 
+    /**
+     * @return
+     */
     @Override
     public int hashCode() {
-        return where;
+        return location;
     }
 
+    /**
+     * @return
+     */
     @Override
     public String toString() {
         return getPlayerName();
