@@ -3,122 +3,175 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * Minimal/basic functionality
- */
 
+/**
+ *
+ */
 public class Castle extends JPanel implements ActionListener {
 
-    /*  gui components */
-    private JButton allRooms;
-    private JPanel northPanel, centerPanel;
+    /**
+     *
+     */
+    private JPanel northPanel, southPanel;
+
+    /**
+     *
+     */
     private JTextField textField;
-    private JTextArea textArea;
+
+    /**
+     *
+     */
     private JButton[] buttons = new JButton[5];
 
-    /* Our implementation of the hash-table, player and room classes */
-    private CastleHashTable<Player, String> table;
-    private Player[] player;
-    private Room[] rooms;
+    /**
+     *
+     */
+    private JButton move, allRooms, findPlayer;
 
-    /* Names of the rooms */
-    private String[] roomNames = {
-        "Dungeon", "Servant's Room", "Great Hall", "Throne Room", "The Wardrobe"
-    };
+    /**
+     *
+     */
+    private CastleBoard castleBoard;
 
-    /* Names of the players */
-    private String[] names = {
-        "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
-        "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen"
-    };
+    /**
+     *
+     */
+    private Controller controller;
 
-    // TODO: Divide into more for clarity
+    /**
+     * @param windowX
+     * @param windowY
+     */
     public Castle(int windowX, int windowY) {
         this.setPreferredSize(new Dimension(windowX, windowY));
         this.setBackground(Color.white);
         this.setLayout(new BorderLayout());
+        controller = new Controller();
+        castleBoard = new CastleBoard(windowX, windowY, controller);
+        setNorthPanel();
+        setSouthPanel();
+        setCenterPanel();
+    }
 
-        northPanel = new JPanel(new GridLayout(1, 8));
-        centerPanel = new JPanel(new GridLayout());
+    /**
+     *
+     */
+    private void setCenterPanel() {
+        this.add(castleBoard, "Center");
+        castleBoard.requestFocus();
+    }
 
-        rooms = new Room[5];
-        table = new CastleHashTable<>(5);
-        player = new Player[15];
-        allRooms = new JButton("Display All Rooms");
-        textArea = new JTextArea();
+    /**
+     *
+     */
+    private void setSouthPanel() {
+        southPanel = new JPanel(new GridLayout());
         textField = new JTextField();
-
-        /* just aesthetics */
+        textField.setBackground(Color.black);
+        textField.setForeground(Color.white);
         textField.setEditable(false);
         textField.setHorizontalAlignment(JTextField.CENTER);
         textField.setText("Find out where a player is by clicking a button");
+        southPanel.add(textField);
+        this.add(southPanel, "South");
+    }
 
-        /* initializing rooms with specified names from roomNames */
-        for (int i = 0; i < rooms.length; i++) {
-            rooms[i] = new Room(roomNames[i] + " " + i, i);
-        }
-
-        /* initializes the players with names from names array*/
-        for (int j = 0; j < player.length; j++) {
-            player[j] = new Player(names[j], j * 10);
-            table.put(player[j], player[j].toString());
-        }
-
-        /* Creates a button for every room with corresponding name */
+    /**
+     *
+     */
+    private void setNorthPanel() {
+        northPanel = new JPanel(new GridLayout(1, 8));
+        allRooms = new JButton("Display All Rooms");
+        allRooms.addActionListener(this);
+        allRooms.setFocusable(false);
+        move = new JButton("Move");
+        move.addActionListener(this);
+        move.setFocusable(false);
         for (int l = 0; l < buttons.length; l++) {
-            buttons[l] = new JButton(rooms[l].getRoomName());
+            buttons[l] = new JButton(controller.getRoomName(l));
             buttons[l].addActionListener(this);
+            buttons[l].setFocusable(false);
             northPanel.add(buttons[l]);
         }
-
-        allRooms.addActionListener(this);
-        centerPanel.add(textField);
-        centerPanel.add(textArea);
+        findPlayer = new JButton("Find a Player");
+        findPlayer.addActionListener(this);
+        findPlayer.setFocusable(false);
         northPanel.add(allRooms);
+        northPanel.add(move);
+        northPanel.add(findPlayer);
+        northPanel.setFocusable(false);
 
-        this.add(centerPanel, "Center");
         this.add(northPanel, "North");
     }
 
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
         /* For aesthetics takes the native screen size*/
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int width = (int) screenSize.getWidth(); // divides in half
-        int height = (int) screenSize.getHeight() / 2;
-        Window window = new Window();
+        int height = (int) screenSize.getHeight() - 1;
         Castle view = new Castle(width, height);
+        Window window = new Window();
         window.addPanel(view);
         window.showFrame();
     }
 
+    /**
+     * @param actionEvent
+     */
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        for (int i = 0; i < buttons.length; i++) {
-            // button index corresponds to room index
-            if (actionEvent.getSource() == buttons[i]) {
-                // tests get player by specifying room
-                textField.setText(table.playersInRoom(rooms[i]));
-                repaint();
-            }
-        }
+        castleBoard.actionPerformed(actionEvent);
+        for (int i = 0; i < buttons.length; i++)
+            if (actionEvent.getSource() == buttons[i])
+                textField.setText(controller.getPlayersInRoom(i));
         if (actionEvent.getSource() == allRooms) {
-            textArea.setText(table.displayAll());
-            repaint();
+            castleBoard.setTimer(false);
+            String displayAll =   controller.tableDisplayAll();
+            JOptionPane.showMessageDialog(null, displayAll, "", 1);
+            castleBoard.setTimer(true);
         }
+        if (actionEvent.getSource() == move)
+            controller.move(controller.getPlayer());
+        if (actionEvent.getSource() == findPlayer) {
+            castleBoard.setTimer(false);
+            String result
+                = (String) JOptionPane.showInputDialog(null,
+                "Pick a player",
+                "Pick", JOptionPane.QUESTION_MESSAGE, null, controller.getAllPlayers(), "Titan");
+            JOptionPane.showMessageDialog(null, controller.getPlayerRoom(result), "", 1);
+            castleBoard.setTimer(true);
+        }
+        castleBoard.requestFocus();
     }
 
+    /**
+     *
+     */
     /* Contains the main window frame. */
     public static class Window extends JFrame {
         private Container c = this.getContentPane();
 
+        /**
+         *
+         */
         private Window() {
             super("Hash_The_Castle");
         }
 
+        /**
+         * @param p
+         */
         private void addPanel(JPanel p) {
             this.c.add(p);
         }
 
+        /**
+         *
+         */
         private void showFrame() {
             this.pack();
             this.setVisible(true);
