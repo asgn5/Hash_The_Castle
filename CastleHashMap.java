@@ -1,12 +1,15 @@
+/**
+ * Chris Montani, Richard Kent, Rodrigo Choque
+ */
+
 public interface CastleHashMap<K, V> {
+    V get(Object key);
 
-    public V get(Object key);
+    boolean isEmpty();
 
-    public boolean isEmpty();
+    V put(K key, V value);
 
-    public V put(K key, V value);
+    V remove(Object key);
 
-    public V remove(Object key);
-
-    public int size();
+    int size();
 }
